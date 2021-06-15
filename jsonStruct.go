@@ -116,6 +116,7 @@ func walkArr(arr ast.Array, a ...interface{}) {
 		codeString += "[]interface{}" + "`json:\"" + tagString + "\"`"
 	case flagLiteral:
 		//see if it is all same type
+		codeString += " []" + findArrayType(arr) + " `json:\"" + tagString + "\"`"
 	}
 
 	// for _, childObj := range arr.Children {
@@ -135,12 +136,33 @@ func walkArr(arr ast.Array, a ...interface{}) {
 	// }
 }
 
-// func findArrayType(arr ast.Array)string{
-//     res := ""
-//     for _, child := range arr.Children{
-//         t := child.Value.(ast.Literal)
-//         if res== "" {
-//             res =
-//         }
-//     }
-// }
+func findArrayType(arr ast.Array) string {
+	var res ast.LiteralValueType = ast.NullLiteralValueType
+	for i, child := range arr.Children {
+		t := child.Value.(ast.Literal).ValueType
+		fmt.Printf("result is %v child type is %v child is %+v\n", res, t, child)
+		if i == 0 {
+			fmt.Println("assigning result as : ", t, "from ", child.Value.(ast.Literal).Value)
+			res = t
+		} else {
+			if child.Value.(ast.Literal).Value != "," && res != t {
+				return "interface{}"
+			}
+		}
+	}
+
+	switch res {
+	case ast.StringLiteralValueType:
+		return "string"
+	case ast.IntegerLiteralValueType:
+		return "int"
+	case ast.FloatLiteralValueType:
+		return "float"
+	case ast.NullLiteralValueType:
+		return "interface{}"
+	case ast.BooleanLiteralValueType:
+		return "bool"
+	default:
+		return "interface{}"
+	}
+}
