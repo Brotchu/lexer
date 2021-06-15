@@ -88,19 +88,59 @@ func walkArr(arr ast.Array, a ...interface{}) {
 	if a != nil {
 		fmt.Println("---CHILDREN OF", a)
 	}
+
+	flagLiteral, flagObj, flagArray := false, false, false
 	for _, childObj := range arr.Children {
-		// fmt.Println("[Key: ",childObj.Key.Value," Value: ",childObj.Value,"]\n")
 		switch childObj.Value.(type) {
 		case ast.Literal:
-			res := childObj.Value.(ast.Literal)
-			fmt.Printf("\n VALUE %+v", res)
+			flagLiteral = true
 		case ast.Object:
-			res := childObj.Value.(ast.Object)
-			walkObj(res)
+			flagObj = true
 		case ast.Array:
-			res := childObj.Value.(ast.Array)
-			fmt.Println("Array", res)
+			flagArray = true
 		}
-		fmt.Println()
 	}
+	tagString := fmt.Sprintf("%v", a[0])
+	switch true {
+	case flagArray && flagLiteral && flagObj:
+		fmt.Println("[]interface{}")
+		codeString += "[]interface{}" + "`json:\"" + tagString + "\"`"
+	case flagArray && flagLiteral:
+		fmt.Println("[]interface{}")
+		codeString += "[]interface{}" + "`json:\"" + tagString + "\"`"
+	case flagArray && flagObj:
+		fmt.Println("[]interface{}")
+		codeString += "[]interface{}" + "`json:\"" + tagString + "\"`"
+	case flagLiteral && flagObj:
+		fmt.Println("[]interface{}")
+		codeString += "[]interface{}" + "`json:\"" + tagString + "\"`"
+	case flagLiteral:
+		//see if it is all same type
+	}
+
+	// for _, childObj := range arr.Children {
+	// 	// fmt.Println("[Key: ",childObj.Key.Value," Value: ",childObj.Value,"]\n")
+	// 	switch childObj.Value.(type) {
+	// 	case ast.Literal:
+	// 		res := childObj.Value.(ast.Literal)
+	// 		fmt.Printf("\n VALUE %+v", res)
+	// 	case ast.Object:
+	// 		res := childObj.Value.(ast.Object)
+	// 		walkObj(res)
+	// 	case ast.Array:
+	// 		res := childObj.Value.(ast.Array)
+	// 		fmt.Println("Array", res)
+	// 	}
+	// 	fmt.Println()
+	// }
 }
+
+// func findArrayType(arr ast.Array)string{
+//     res := ""
+//     for _, child := range arr.Children{
+//         t := child.Value.(ast.Literal)
+//         if res== "" {
+//             res =
+//         }
+//     }
+// }
