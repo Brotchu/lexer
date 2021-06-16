@@ -5,6 +5,7 @@ import (
 	"go/format"
 	"lexer/ast"
 	"log"
+	"reflect"
 	"strings"
 )
 
@@ -91,10 +92,13 @@ func walkArr(arr ast.Array, a ...interface{}) string {
 
 	flagLiteral, flagObj, flagArray := false, false, false
 	for _, childObj := range arr.Children {
-		log.Printf("%v\n", childObj.Value)
+		log.Println(reflect.TypeOf(childObj.Value))
 		switch childObj.Value.(type) {
 		case ast.Literal:
-			flagLiteral = true
+			log.Printf("%v\n", childObj.Value)
+			if childObj.Value.(ast.Literal).Value != "," {
+				flagLiteral = true
+			}
 		case ast.Object:
 			flagObj = true
 		case ast.Array:
