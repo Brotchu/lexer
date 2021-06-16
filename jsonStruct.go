@@ -105,53 +105,45 @@ func walkArr(arr ast.Array, a ...interface{}) string {
 			flagArray = true
 		}
 	}
-	tagString := fmt.Sprintf("%v", a[0])
+
+	var returnString string
 	fmt.Println(flagLiteral, flagObj, flagArray)
 	switch true {
 	case flagArray && flagLiteral && flagObj:
 		fmt.Println("[]interface{}")
-		return "[]interface{}" + "`json:\"" + tagString + "\"`"
+		returnString = "[]interface{}"
 	case flagArray && flagLiteral:
 		fmt.Println("[]interface{}")
-		return "[]interface{}" + "`json:\"" + tagString + "\"`"
+		returnString = "[]interface{}"
 	case flagArray && flagObj:
 		fmt.Println("[]interface{}")
-		return "[]interface{}" + "`json:\"" + tagString + "\"`"
+		returnString = "[]interface{}"
 	case flagLiteral && flagObj:
 		fmt.Println("[]interface{}")
-		return "[]interface{}" + "`json:\"" + tagString + "\"`"
+		returnString = "[]interface{}"
 	case flagLiteral:
 		//see if it is all same type
-		return " []" + findArrayType(arr) + " `json:\"" + tagString + "\"`"
+		returnString = " []" + findArrayType(arr)
 	case flagArray:
 		childTypes := []string{}
 		for _, child := range arr.Children {
 			switch child.Value.(type) {
 			case ast.Array:
-				childTypes = append(childTypes, walkArr(child.Value.(ast.Array)))
+				log.Printf("arr -->> %+v\n", child)
+				childTypes = append(childTypes, walkArr(child.Value.(ast.Array))) //TODO:
 			}
 		}
 		fmt.Printf("-----------%v\n", childTypes)
-		return "[]" + areSame(childTypes)
+		returnString = "[]" + areSame(childTypes)
 	default:
-		return "interface{}"
+		returnString = "interface{}"
 	}
 
-	// for _, childObj := range arr.Children {
-	// 	// fmt.Println("[Key: ",childObj.Key.Value," Value: ",childObj.Value,"]\n")
-	// 	switch childObj.Value.(type) {
-	// 	case ast.Literal:
-	// 		res := childObj.Value.(ast.Literal)
-	// 		fmt.Printf("\n VALUE %+v", res)
-	// 	case ast.Object:
-	// 		res := childObj.Value.(ast.Object)
-	// 		walkObj(res)
-	// 	case ast.Array:
-	// 		res := childObj.Value.(ast.Array)
-	// 		fmt.Println("Array", res)
-	// 	}
-	// 	fmt.Println()
-	// }
+	if a != nil {
+		tagString := fmt.Sprintf("%v", a[0])
+		returnString += "`json:\"" + tagString + "\"`"
+	}
+	return returnString
 }
 
 func findArrayType(arr ast.Array) string {
