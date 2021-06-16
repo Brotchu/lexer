@@ -77,20 +77,21 @@ func walkObj(obj ast.Object, a ...interface{}) {
 				walkObj(res, childObj.Key.Value)
 			case ast.Array:
 				res := result.Content.(ast.Array)
-				walkArr(res, childObj.Key.Value)
+				codeString += walkArr(res, childObj.Key.Value) + "\n"
 			}
 		}
 		fmt.Println()
 	}
 	// codeString = codeString + "} \n" //TODO:
 }
-func walkArr(arr ast.Array, a ...interface{}) {
+func walkArr(arr ast.Array, a ...interface{}) string {
 	if a != nil {
 		fmt.Println("---CHILDREN OF", a)
 	}
 
 	flagLiteral, flagObj, flagArray := false, false, false
 	for _, childObj := range arr.Children {
+		log.Printf("%v\n", childObj.Value)
 		switch childObj.Value.(type) {
 		case ast.Literal:
 			flagLiteral = true
@@ -101,22 +102,35 @@ func walkArr(arr ast.Array, a ...interface{}) {
 		}
 	}
 	tagString := fmt.Sprintf("%v", a[0])
+	fmt.Println(flagLiteral, flagObj, flagArray)
 	switch true {
 	case flagArray && flagLiteral && flagObj:
 		fmt.Println("[]interface{}")
-		codeString += "[]interface{}" + "`json:\"" + tagString + "\"`"
+		return "[]interface{}" + "`json:\"" + tagString + "\"`"
 	case flagArray && flagLiteral:
 		fmt.Println("[]interface{}")
-		codeString += "[]interface{}" + "`json:\"" + tagString + "\"`"
+		return "[]interface{}" + "`json:\"" + tagString + "\"`"
 	case flagArray && flagObj:
 		fmt.Println("[]interface{}")
-		codeString += "[]interface{}" + "`json:\"" + tagString + "\"`"
+		return "[]interface{}" + "`json:\"" + tagString + "\"`"
 	case flagLiteral && flagObj:
 		fmt.Println("[]interface{}")
-		codeString += "[]interface{}" + "`json:\"" + tagString + "\"`"
+		return "[]interface{}" + "`json:\"" + tagString + "\"`"
 	case flagLiteral:
 		//see if it is all same type
-		codeString += " []" + findArrayType(arr) + " `json:\"" + tagString + "\"`"
+		return " []" + findArrayType(arr) + " `json:\"" + tagString + "\"`"
+	case flagArray:
+		childTypes := []string{}
+		for _, child := range arr.Children {
+			switch child.Value.(type) {
+			case ast.Array:
+				childTypes = append(childTypes, walkArr(child.Value.(ast.Array)))
+			}
+		}
+		fmt.Printf("-----------%v\n", childTypes)
+		return "[]" + areSame(childTypes)
+	default:
+		return "interface{}"
 	}
 
 	// for _, childObj := range arr.Children {
@@ -165,4 +179,16 @@ func findArrayType(arr ast.Array) string {
 	default:
 		return "interface{}"
 	}
+}
+
+func areSame(c []string) string {
+	if len(c) == 0 {
+		return "[]interface{}"
+	}
+	for i := 1; i < len(c); i++ {
+		if c[i] != c[0] {
+			return "[]interface{}"
+		}
+	}
+	return c[0]
 }
